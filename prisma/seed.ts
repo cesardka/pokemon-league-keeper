@@ -11,11 +11,6 @@ function isNeonUrl(url: string | undefined): boolean {
 }
 
 function createPrismaClient(): PrismaClient {
-  console.log({
-    DATABASE_URL: process.env.DATABASE_URL,
-    isNeonUrl: isNeonUrl(process.env.DATABASE_URL),
-  });
-
   if (isNeonUrl(process.env.DATABASE_URL)) {
     neonConfig.webSocketConstructor = ws;
     const pool = new NeonPool({ connectionString: process.env.DATABASE_URL });
