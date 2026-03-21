@@ -17,9 +17,9 @@ export default function NotFound() {
               fontFamily: "Pokemon",
             }}
           >
-            Nope! There's <br /> only trash here.
+            Nope! There&apos;s <br /> only trash here.
           </h1>
-          
+
           <p className="text-gray-500 mb-8 text-lg font-medium">
             The page you&apos;re looking for doesn&apos;t exist or you
             don&apos;t have access to it.

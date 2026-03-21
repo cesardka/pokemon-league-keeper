@@ -1,7 +1,6 @@
 import { redirect, notFound } from "next/navigation";
 import { getSession } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
-import Link from "next/link";
 import { BackButton } from "@/components/BackButton";
 import { BarcodeScanner } from "@/components/BarcodeScanner";
 

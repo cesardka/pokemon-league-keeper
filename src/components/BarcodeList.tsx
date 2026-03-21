@@ -1,7 +1,7 @@
 "use client";
 
 import Image from "next/image";
-import { useRef, useSyncExternalStore, useState } from "react";
+import { useSyncExternalStore, useState } from "react";
 import Barcode from "react-barcode";
 
 interface BarcodeItem {
@@ -26,12 +26,18 @@ interface BarcodeStore {
 }
 
 // External store for barcode state
-let store: BarcodeStore = {
-  barcodes: [],
-  eventId: "",
-  tick: 0,
-};
+let store: BarcodeStore | null = null;
 const listeners = new Set<() => void>();
+
+function initStore(eventId: string, initialBarcodes: BarcodeItem[]) {
+  if (!store || store.eventId !== eventId) {
+    store = {
+      barcodes: initialBarcodes,
+      eventId,
+      tick: 0,
+    };
+  }
+}
 let pollingInterval: ReturnType<typeof setInterval> | null = null;
 let tickInterval: ReturnType<typeof setInterval> | null = null;
 
@@ -63,12 +69,13 @@ function getSnapshot() {
 }
 
 async function fetchBarcodes() {
+  if (!store) return;
   try {
     const lastBarcode = store.barcodes[0];
     const since = lastBarcode?.scannedAt || new Date(0).toISOString();
 
     const response = await fetch(
-      `/api/events/${store.eventId}/barcodes?since=${encodeURIComponent(since)}`
+      `/api/events/${store.eventId}/barcodes?since=${encodeURIComponent(since)}`,
     );
 
     if (!response.ok) return;
@@ -90,6 +97,7 @@ async function fetchBarcodes() {
 
         // Remove isNew flag after animation
         setTimeout(() => {
+          if (!store) return;
           store = {
             ...store,
             barcodes: store.barcodes.map((b) => ({ ...b, isNew: false })),
@@ -119,6 +127,7 @@ function stopPolling() {
 function startTickUpdates() {
   if (!tickInterval) {
     tickInterval = setInterval(() => {
+      if (!store) return;
       store = { ...store, tick: store.tick + 1 };
       notifyListeners();
     }, 1000);
@@ -160,12 +169,32 @@ function BarcodeCard({ barcode }: { barcode: BarcodeItem }) {
           title="Copy barcode value"
         >
           {copied ? (
-            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+            <svg
+              className="w-5 h-5"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M5 13l4 4L19 7"
+              />
             </svg>
           ) : (
-            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
+            <svg
+              className="w-5 h-5"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"
+              />
             </svg>
           )}
         </button>
@@ -189,9 +218,7 @@ function BarcodeCard({ barcode }: { barcode: BarcodeItem }) {
           >
             {formatRelativeTime(barcode.scannedAt)}
           </p>
-          <p className="text-xs text-gray-400">
-            {barcode.scannedBy}
-          </p>
+          <p className="text-xs text-gray-400">{barcode.scannedBy}</p>
         </div>
       </div>
     </div>
@@ -217,25 +244,20 @@ function formatRelativeTime(dateString: string): string {
   return `${diffHours}h ${remainingMinutes}m ago`;
 }
 
-export function BarcodeList({ eventId, initialBarcodes, selectedRoundId }: BarcodeListProps) {
-  const initRef = useRef(false);
-
-  // Initialize store on first render
-  if (!initRef.current) {
-    store = {
-      barcodes: initialBarcodes,
-      eventId,
-      tick: 0,
-    };
-    initRef.current = true;
-  }
+export function BarcodeList({
+  eventId,
+  initialBarcodes,
+  selectedRoundId,
+}: BarcodeListProps) {
+  // Initialize store before subscribing
+  initStore(eventId, initialBarcodes);
 
   const state = useSyncExternalStore(subscribe, getSnapshot, getSnapshot);
 
   // Filter barcodes by selected round
   const filteredBarcodes = selectedRoundId
-    ? state.barcodes.filter((b) => b.roundId === selectedRoundId)
-    : state.barcodes;
+    ? state?.barcodes.filter((b) => b.roundId === selectedRoundId) ?? []
+    : state?.barcodes ?? [];
 
   if (filteredBarcodes.length === 0) {
     return (
@@ -263,7 +285,8 @@ export function BarcodeList({ eventId, initialBarcodes, selectedRoundId }: Barco
   return (
     <div className="space-y-2">
       <p className="text-sm text-gray-500 mb-4">
-        {filteredBarcodes.length} barcode{filteredBarcodes.length !== 1 ? "s" : ""} scanned
+        {filteredBarcodes.length} barcode
+        {filteredBarcodes.length !== 1 ? "s" : ""} scanned
         {selectedRoundId ? " in this round" : ""}
       </p>
 

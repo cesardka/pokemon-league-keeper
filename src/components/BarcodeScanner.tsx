@@ -32,6 +32,7 @@ let scannerState: ScannerState = {
   selectedRound: "",
 };
 const listeners = new Set<() => void>();
+let defaultRoundId: string | null = null;
 
 function subscribe(callback: () => void) {
   listeners.add(callback);
@@ -39,6 +40,10 @@ function subscribe(callback: () => void) {
 }
 
 function getSnapshot() {
+  // Lazy initialization of selectedRound
+  if (!scannerState.selectedRound && defaultRoundId) {
+    scannerState = { ...scannerState, selectedRound: defaultRoundId };
+  }
   return scannerState;
 }
 
@@ -47,16 +52,16 @@ function updateState(partial: Partial<ScannerState>) {
   listeners.forEach((l) => l());
 }
 
+function setDefaultRound(roundId: string) {
+  defaultRoundId = roundId;
+}
 
 export function BarcodeScanner({ eventId, rounds }: BarcodeScannerProps) {
   const scannerRef = useRef<Html5Qrcode | null>(null);
-  const initRef = useRef(false);
 
-  // Initialize selectedRound to most recent round (highest number) on first render
-  if (!initRef.current && rounds.length > 0) {
-    const mostRecentRound = rounds[rounds.length - 1];
-    scannerState = { ...scannerState, selectedRound: mostRecentRound.id };
-    initRef.current = true;
+  // Set default round for lazy initialization (no state mutation here)
+  if (rounds.length > 0 && !defaultRoundId) {
+    setDefaultRound(rounds[rounds.length - 1].id);
   }
 
   const state = useSyncExternalStore(subscribe, getSnapshot, getSnapshot);
@@ -85,7 +90,7 @@ export function BarcodeScanner({ eventId, rounds }: BarcodeScannerProps) {
         },
         () => {
           // Ignore scan failures
-        }
+        },
       );
 
       updateState({ status: "scanning" });
@@ -131,7 +136,7 @@ export function BarcodeScanner({ eventId, rounds }: BarcodeScannerProps) {
   const [submitState, submitAction, isSubmitting] = useActionState(
     async (
       _prev: { error: string | null },
-      formData: FormData
+      formData: FormData,
     ): Promise<{ error: string | null }> => {
       const value = formData.get("scannedValue") as string;
       const roundId = formData.get("roundId") as string;
@@ -165,7 +170,7 @@ export function BarcodeScanner({ eventId, rounds }: BarcodeScannerProps) {
         return { error: "Failed to submit" };
       }
     },
-    { error: null }
+    { error: null },
   );
 
   const handleCancel = () => {
@@ -207,7 +212,6 @@ export function BarcodeScanner({ eventId, rounds }: BarcodeScannerProps) {
           className="absolute inset-0"
         />
 
-        
         {/* Status Messages */}
         {state.status === "idle" && (
           <div className="absolute inset-0 flex items-center justify-center">
@@ -232,16 +236,21 @@ export function BarcodeScanner({ eventId, rounds }: BarcodeScannerProps) {
 
       {/* Instructions */}
       <div className="bg-gray-800 px-4 py-3 text-center">
-        <p className="text-gray-300 text-sm">
-          Point camera at barcode to scan
-        </p>
+        <p className="text-gray-300 text-sm">Point camera at barcode to scan</p>
       </div>
 
       {/* Confirmation Modal */}
       {state.showConfirm && (
         <div className="fixed inset-0 bg-black/80 flex items-center justify-center p-4 z-50">
-          <form action={submitAction} className="bg-white rounded-2xl p-6 w-full max-w-sm">
-            <input type="hidden" name="scannedValue" value={state.scannedValue || ""} />
+          <form
+            action={submitAction}
+            className="bg-white rounded-2xl p-6 w-full max-w-sm"
+          >
+            <input
+              type="hidden"
+              name="scannedValue"
+              value={state.scannedValue || ""}
+            />
             <input type="hidden" name="roundId" value={state.selectedRound} />
 
             <div className="text-center mb-6">
@@ -255,7 +264,9 @@ export function BarcodeScanner({ eventId, rounds }: BarcodeScannerProps) {
             </div>
 
             {submitState.error && (
-              <p className="text-red-500 text-sm text-center mb-4">{submitState.error}</p>
+              <p className="text-red-500 text-sm text-center mb-4">
+                {submitState.error}
+              </p>
             )}
 
             <div className="space-y-3">
