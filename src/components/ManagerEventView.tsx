@@ -49,6 +49,7 @@ export function ManagerEventView({
         eventId={eventId}
         initialBarcodes={initialBarcodes}
         selectedRoundId={selectedRoundId}
+        isEventActive={!isEventCompleted}
       />
     </>
   );

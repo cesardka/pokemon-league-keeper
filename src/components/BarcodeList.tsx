@@ -17,6 +17,7 @@ interface BarcodeListProps {
   eventId: string;
   initialBarcodes: BarcodeItem[];
   selectedRoundId?: string | null;
+  isEventActive?: boolean;
 }
 
 interface BarcodeStore {
@@ -45,12 +46,25 @@ function notifyListeners() {
   listeners.forEach((l) => l());
 }
 
+let shouldPoll = true;
+
+function setPollingEnabled(enabled: boolean) {
+  shouldPoll = enabled;
+  if (enabled && listeners.size > 0) {
+    startPolling();
+  } else if (!enabled) {
+    stopPolling();
+  }
+}
+
 function subscribe(callback: () => void) {
   listeners.add(callback);
 
-  // Start polling when first listener subscribes
+  // Start polling when first listener subscribes (only if polling enabled)
   if (listeners.size === 1) {
-    startPolling();
+    if (shouldPoll) {
+      startPolling();
+    }
     startTickUpdates();
   }
 
@@ -248,9 +262,13 @@ export function BarcodeList({
   eventId,
   initialBarcodes,
   selectedRoundId,
+  isEventActive = true,
 }: BarcodeListProps) {
   // Initialize store before subscribing
   initStore(eventId, initialBarcodes);
+
+  // Control polling based on event status
+  setPollingEnabled(isEventActive);
 
   const state = useSyncExternalStore(subscribe, getSnapshot, getSnapshot);
 
