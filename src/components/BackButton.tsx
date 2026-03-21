@@ -15,7 +15,7 @@ export function BackButton({ href, variant = "blue", className = "" }: BackButto
   return (
     <Link
       href={href}
-      className={`flex items-center self-stretch px-3 ml-0 transition-colors ${variantStyles[variant]} ${className}`}
+      className={`flex items-center self-stretch px-3 ml-0 text-sm transition-colors ${variantStyles[variant]} ${className}`}
     >
       ← Back
     </Link>

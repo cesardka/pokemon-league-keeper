@@ -28,12 +28,14 @@ export default async function DashboardPage() {
   return (
     <div className="flex flex-col flex-1 bg-gray-50">
       <div className="flex flex-col flex-1 w-full max-w-2xl mx-auto">
-        <header className="bg-white border-b px-4 py-3 flex items-center justify-between">
-          <div>
-            <h1 className="font-semibold text-gray-900">{session.storeName}</h1>
-            <p className="text-sm text-gray-500">Tournament Manager</p>
+        <header className="bg-white border-b">
+          <div className="flex items-stretch justify-between">
+            <div className="px-4 py-3">
+              <h1 className="font-semibold text-gray-900">{session.storeName}</h1>
+              <p className="text-sm text-gray-500">Tournament Manager</p>
+            </div>
+            <LogoutButton />
           </div>
-          <LogoutButton />
         </header>
 
         <main className="flex-1 p-4 space-y-6">

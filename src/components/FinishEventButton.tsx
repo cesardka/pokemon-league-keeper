@@ -7,11 +7,13 @@ import Image from "next/image";
 interface FinishEventButtonProps {
   eventId: string;
   currentStatus: string;
+  className?: string;
 }
 
 export function FinishEventButton({
   eventId,
   currentStatus,
+  className = "",
 }: FinishEventButtonProps) {
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
@@ -59,9 +61,9 @@ export function FinishEventButton({
       <button
         onClick={handleReactivate}
         disabled={isPending}
-        className="px-3 py-1.5 text-sm font-medium rounded-lg bg-green-100 text-green-700 hover:bg-green-200 disabled:opacity-50 transition-colors"
+        className={`flex items-center self-stretch px-3 text-sm font-medium text-green-200 hover:text-white hover:bg-green-600 disabled:opacity-50 transition-colors ${className}`}
       >
-        {isPending ? "Reactivating..." : "Reactivate Event"}
+        {isPending ? "Reactivating..." : "Reactivate"}
       </button>
     );
   }
@@ -70,9 +72,9 @@ export function FinishEventButton({
     <>
       <button
         onClick={() => setShowConfirm(true)}
-        className="px-3 py-1.5 text-sm font-medium rounded-lg bg-red-100 text-red-700 hover:bg-red-200 transition-colors"
+        className={`flex items-center self-stretch px-4 text-sm font-medium text-blue-200 hover:text-white hover:bg-red-600 transition-colors ${className}`}
       >
-        Finish Event
+        Finish <br /> Event
       </button>
 
       {showConfirm && (

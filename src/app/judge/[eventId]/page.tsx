@@ -39,7 +39,7 @@ export default async function JudgeScanPage({ params }: PageProps) {
   return (
     <div className="flex flex-col flex-1 bg-gray-50">
       <div className="flex flex-col flex-1 w-full max-w-2xl mx-auto">
-        <header className="bg-green-600 text-white pr-4">
+        <header className="bg-green-600 text-white">
           <div className="flex items-center justify-between">
             <div className="flex items-stretch gap-3">
               <BackButton href="/judge/select" variant="green" />

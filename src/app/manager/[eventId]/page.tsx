@@ -42,7 +42,7 @@ export default async function ManagerEventPage({ params }: PageProps) {
   return (
     <div className="flex flex-col flex-1 bg-gray-50">
       <div className="flex flex-col flex-1 w-full max-w-2xl mx-auto">
-        <header className="bg-blue-600 text-white pr-4">
+        <header className="bg-blue-600 text-white">
           <div className="flex items-stretch justify-between">
             <div className="flex items-stretch gap-3">
               <BackButton href="/manager" variant="blue" />
@@ -54,9 +54,7 @@ export default async function ManagerEventPage({ params }: PageProps) {
                 </p>
               </div>
             </div>
-            <div className="flex items-center">
-              <FinishEventButton eventId={eventId} currentStatus={event.status} />
-            </div>
+            <FinishEventButton eventId={eventId} currentStatus={event.status} />
           </div>
         </header>
 

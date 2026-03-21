@@ -26,7 +26,7 @@ export default async function ManagerSelectPage() {
   return (
     <div className="flex flex-col flex-1 bg-gray-50">
       <div className="flex flex-col flex-1 w-full max-w-2xl mx-auto">
-        <header className="bg-blue-600 text-white pr-4">
+        <header className="bg-blue-600 text-white">
           <div className="flex items-stretch gap-3">
             <BackButton href="/dashboard" variant="blue" />
             <div className="py-3">
