@@ -165,10 +165,14 @@ export function LoginForm() {
 
       <button
         type="submit"
-        disabled={isPending}
-        className="w-full py-3 px-4 bg-blue-600 hover:bg-blue-700 disabled:bg-gray-300 disabled:cursor-not-allowed text-white font-semibold rounded-xl transition-colors"
+        disabled={isPending || state.success}
+        className={`w-full py-3 px-4 text-white font-semibold rounded-xl transition-colors ${
+          state.success
+            ? "bg-green-600"
+            : "bg-blue-600 hover:bg-blue-700 disabled:bg-gray-300 disabled:cursor-not-allowed"
+        }`}
       >
-        {isPending ? "Verifying..." : "Enter"}
+        {state.success ? "Success" : isPending ? "Verifying..." : "Enter"}
       </button>
     </form>
     </>
