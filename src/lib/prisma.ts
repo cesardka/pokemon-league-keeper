@@ -14,15 +14,25 @@ function isNeonUrl(url: string | undefined): boolean {
 }
 
 function createPrismaClient(): PrismaClient {
-  if (isNeonUrl(process.env.DATABASE_URL)) {
+  const databaseUrl = process.env.DATABASE_URL;
+
+  if (!databaseUrl) {
+    throw new Error("DATABASE_URL environment variable is not set");
+  }
+
+  if (isNeonUrl(databaseUrl)) {
     neonConfig.webSocketConstructor = ws;
-    const pool = new NeonPool({ connectionString: process.env.DATABASE_URL });
-    const adapter = new PrismaNeon(pool as unknown as ConstructorParameters<typeof PrismaNeon>[0]);
+    const pool = new NeonPool({ connectionString: databaseUrl });
+    const adapter = new PrismaNeon(
+      pool as unknown as ConstructorParameters<typeof PrismaNeon>[0],
+    );
     return new PrismaClient({ adapter });
   }
 
-  const pool = new Pool({ connectionString: process.env.DATABASE_URL });
-  const adapter = new PrismaPg(pool as unknown as ConstructorParameters<typeof PrismaPg>[0]);
+  const pool = new Pool({ connectionString: databaseUrl });
+  const adapter = new PrismaPg(
+    pool as unknown as ConstructorParameters<typeof PrismaPg>[0],
+  );
   return new PrismaClient({ adapter });
 }
 
