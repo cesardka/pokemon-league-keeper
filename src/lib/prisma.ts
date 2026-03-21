@@ -1,5 +1,4 @@
 import { PrismaClient } from "@prisma/client";
-import { Pool as NeonPool } from "@neondatabase/serverless";
 import { PrismaNeon } from "@prisma/adapter-neon";
 import { PrismaPg } from "@prisma/adapter-pg";
 import { Pool } from "pg";
@@ -25,10 +24,7 @@ function createPrismaClient(): PrismaClient {
   }
 
   if (isNeonUrl(databaseUrl)) {
-    const pool = new NeonPool({ connectionString: databaseUrl });
-    const adapter = new PrismaNeon(
-      pool as unknown as ConstructorParameters<typeof PrismaNeon>[0],
-    );
+    const adapter = new PrismaNeon({ connectionString: databaseUrl });
     return new PrismaClient({ adapter });
   }
 
