@@ -11,6 +11,8 @@ interface Round {
 interface BarcodeScannerProps {
   eventId: string;
   rounds: Round[];
+  requireConfirmation?: boolean;
+  allowDuplicates?: boolean;
 }
 
 type ScanStatus = "idle" | "scanning" | "success" | "error";
@@ -33,6 +35,8 @@ let scannerState: ScannerState = {
 };
 const listeners = new Set<() => void>();
 let defaultRoundId: string | null = null;
+let lastSubmitTime = 0;
+const SUBMIT_THROTTLE_MS = 2000;
 
 function subscribe(callback: () => void) {
   listeners.add(callback);
@@ -56,8 +60,10 @@ function setDefaultRound(roundId: string) {
   defaultRoundId = roundId;
 }
 
-export function BarcodeScanner({ eventId, rounds }: BarcodeScannerProps) {
+export function BarcodeScanner({ eventId, rounds, requireConfirmation = false, allowDuplicates = true }: BarcodeScannerProps) {
   const scannerRef = useRef<Html5Qrcode | null>(null);
+
+  const isThrottled = () => Date.now() - lastSubmitTime < SUBMIT_THROTTLE_MS;
 
   // Set default round for lazy initialization (no state mutation here)
   if (rounds.length > 0 && !defaultRoundId) {
@@ -65,6 +71,45 @@ export function BarcodeScanner({ eventId, rounds }: BarcodeScannerProps) {
   }
 
   const state = useSyncExternalStore(subscribe, getSnapshot, getSnapshot);
+
+  const autoSubmit = async (value: string) => {
+    if (isThrottled()) {
+      // Resume scanner without submitting
+      setTimeout(() => resumeScanner(), 100);
+      return;
+    }
+
+    try {
+      const response = await fetch("/api/barcodes", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          eventId,
+          roundId: scannerState.selectedRound || null,
+          value,
+          allowDuplicates,
+        }),
+      });
+
+      if (!response.ok) {
+        const data = await response.json();
+        updateState({ error: data.error || "Failed to submit barcode", status: "error" });
+        return;
+      }
+
+      lastSubmitTime = Date.now();
+      updateState({
+        status: "idle",
+        scannedValue: null,
+        error: null,
+        showConfirm: false,
+      });
+
+      setTimeout(() => resumeScanner(), 500);
+    } catch {
+      updateState({ error: "Failed to submit", status: "error" });
+    }
+  };
 
   const startScanner = async () => {
     if (scannerRef.current) return;
@@ -83,10 +128,15 @@ export function BarcodeScanner({ eventId, rounds }: BarcodeScannerProps) {
           // Accept barcode immediately on first successful scan
           updateState({
             scannedValue: decodedText,
-            showConfirm: true,
+            showConfirm: requireConfirmation,
             status: "success",
           });
           scanner.pause(true);
+          
+          if (!requireConfirmation) {
+            // Auto-submit without confirmation
+            autoSubmit(decodedText);
+          }
         },
         () => {
           // Ignore scan failures
@@ -149,6 +199,7 @@ export function BarcodeScanner({ eventId, rounds }: BarcodeScannerProps) {
             eventId,
             roundId: roundId || null,
             value,
+            allowDuplicates,
           }),
         });
 

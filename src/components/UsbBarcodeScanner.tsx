@@ -10,6 +10,8 @@ interface Round {
 interface UsbBarcodeScannerProps {
   eventId: string;
   rounds: Round[];
+  requireConfirmation?: boolean;
+  allowDuplicates?: boolean;
 }
 
 type ScanStatus = "idle" | "ready" | "success" | "error";
@@ -36,6 +38,8 @@ let usbScannerState: ScannerState = {
 };
 const usbListeners = new Set<() => void>();
 let usbDefaultRoundId: string | null = null;
+let usbLastSubmitTime = 0;
+const USB_SUBMIT_THROTTLE_MS = 2000;
 
 function subscribe(callback: () => void) {
   usbListeners.add(callback);
@@ -72,7 +76,7 @@ function resetState() {
   usbListeners.forEach((l) => l());
 }
 
-export function UsbBarcodeScanner({ eventId, rounds }: UsbBarcodeScannerProps) {
+export function UsbBarcodeScanner({ eventId, rounds, requireConfirmation = false, allowDuplicates = true }: UsbBarcodeScannerProps) {
   const inputBufferRef = useRef<string>("");
   const lastKeyTimeRef = useRef<number>(0);
   const inputRef = useRef<HTMLInputElement>(null);
@@ -81,12 +85,51 @@ export function UsbBarcodeScanner({ eventId, rounds }: UsbBarcodeScannerProps) {
   const SCAN_THRESHOLD_MS = 100;
   const MIN_BARCODE_LENGTH = 3;
 
+  const isThrottled = () => Date.now() - usbLastSubmitTime < USB_SUBMIT_THROTTLE_MS;
+
   // Set default round for lazy initialization
   if (rounds.length > 0 && !usbDefaultRoundId) {
     setDefaultRound(rounds[rounds.length - 1].id);
   }
 
   const state = useSyncExternalStore(subscribe, getSnapshot, getSnapshot);
+
+  const autoSubmit = async (value: string) => {
+    if (isThrottled()) {
+      // Ignore throttled scans
+      updateState({ status: "ready", scannedValue: null });
+      return;
+    }
+
+    try {
+      const response = await fetch("/api/barcodes", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          eventId,
+          roundId: usbScannerState.selectedRound || null,
+          value,
+          allowDuplicates,
+        }),
+      });
+
+      if (!response.ok) {
+        const data = await response.json();
+        updateState({ error: data.error || "Failed to submit barcode", status: "error" });
+        return;
+      }
+
+      usbLastSubmitTime = Date.now();
+      updateState({
+        status: "ready",
+        scannedValue: null,
+        error: null,
+        showConfirm: false,
+      });
+    } catch {
+      updateState({ error: "Failed to submit", status: "error" });
+    }
+  };
 
   // Initialize state on mount
   useEffect(() => {
@@ -105,11 +148,16 @@ export function UsbBarcodeScanner({ eventId, rounds }: UsbBarcodeScannerProps) {
       if (e.key === "Enter") {
         if (inputBufferRef.current.length >= MIN_BARCODE_LENGTH) {
           e.preventDefault();
+          const scannedValue = inputBufferRef.current;
           updateState({
-            scannedValue: inputBufferRef.current,
-            showConfirm: true,
+            scannedValue,
+            showConfirm: requireConfirmation,
             status: "success",
           });
+          
+          if (!requireConfirmation) {
+            autoSubmit(scannedValue);
+          }
         }
         inputBufferRef.current = "";
         lastKeyTimeRef.current = 0;
@@ -155,6 +203,7 @@ export function UsbBarcodeScanner({ eventId, rounds }: UsbBarcodeScannerProps) {
             eventId,
             roundId: roundId || null,
             value,
+            allowDuplicates,
           }),
         });
 
@@ -188,13 +237,18 @@ export function UsbBarcodeScanner({ eventId, rounds }: UsbBarcodeScannerProps) {
 
   const handleMockSubmit = () => {
     if (state.mockInput.trim().length >= MIN_BARCODE_LENGTH) {
+      const scannedValue = state.mockInput.trim();
       updateState({
-        scannedValue: state.mockInput.trim(),
-        showConfirm: true,
+        scannedValue,
+        showConfirm: requireConfirmation,
         status: "success",
         mockMode: false,
         mockInput: "",
       });
+      
+      if (!requireConfirmation) {
+        autoSubmit(scannedValue);
+      }
     }
   };
 

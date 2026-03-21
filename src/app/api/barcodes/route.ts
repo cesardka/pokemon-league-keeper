@@ -17,7 +17,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const { eventId, roundId, value } = await request.json();
+    const { eventId, roundId, value, allowDuplicates = true } = await request.json();
 
     if (!eventId || !value) {
       return NextResponse.json(
@@ -45,7 +45,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Check for duplicate barcode in the same round
-    if (roundId) {
+    if (roundId && !allowDuplicates) {
       const existing = await prisma.barcode.findUnique({
         where: {
           roundId_value: {
