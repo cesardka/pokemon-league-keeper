@@ -1,0 +1,109 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model Store {
+  id        String   @id @default(cuid())
+  name      String
+  location  String?
+  country   String?
+  eventCode String   @unique
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  events    Event[]
+}
+
+enum EventStatus {
+  DRAFT
+  ACTIVE
+  COMPLETED
+}
+
+model Event {
+  id        String      @id @default(cuid())
+  storeId   String
+  store     Store       @relation(fields: [storeId], references: [id], onDelete: Cascade)
+  name      String
+  game      String      @default("Pokemon TCG")
+  date      DateTime
+  status    EventStatus @default(DRAFT)
+  createdAt DateTime    @default(now())
+  updatedAt DateTime    @updatedAt
+  rounds    Round[]
+  barcodes  Barcode[]
+}
+
+model Round {
+  id          String    @id @default(cuid())
+  eventId     String
+  event       Event     @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  roundNumber Int
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  matches     Match[]
+  barcodes    Barcode[]
+
+  @@unique([eventId, roundNumber])
+}
+
+enum Category {
+  JUNIOR
+  SENIOR
+  MASTER
+}
+
+model Participant {
+  id          String   @id @default(cuid())
+  name        String
+  pokemonId   String?
+  birthDate   DateTime?
+  category    Category @default(MASTER)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  matchesAsP1 Match[]  @relation("Participant1")
+  matchesAsP2 Match[]  @relation("Participant2")
+  wins        Match[]  @relation("Winner")
+}
+
+enum MatchResult {
+  PENDING
+  P1_WIN
+  P2_WIN
+  TIE
+}
+
+model Match {
+  id             String      @id @default(cuid())
+  roundId        String
+  round          Round       @relation(fields: [roundId], references: [id], onDelete: Cascade)
+  participant1Id String?
+  participant1   Participant? @relation("Participant1", fields: [participant1Id], references: [id])
+  participant2Id String?
+  participant2   Participant? @relation("Participant2", fields: [participant2Id], references: [id])
+  winnerId       String?
+  winner         Participant? @relation("Winner", fields: [winnerId], references: [id])
+  result         MatchResult @default(PENDING)
+  createdAt      DateTime    @default(now())
+  updatedAt      DateTime    @updatedAt
+}
+
+model Barcode {
+  id        String   @id @default(cuid())
+  eventId   String
+  event     Event    @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  roundId   String?
+  round     Round?   @relation(fields: [roundId], references: [id], onDelete: SetNull)
+  value     String
+  scannedAt DateTime @default(now())
+  scannedBy String
+
+  @@unique([roundId, value])
+  @@index([eventId, scannedAt])
+}
