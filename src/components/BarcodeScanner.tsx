@@ -35,7 +35,6 @@ let scannerState: ScannerState = {
 };
 const listeners = new Set<() => void>();
 let defaultRoundId: string | null = null;
-let lastSubmitTime = 0;
 const SUBMIT_THROTTLE_MS = 2000;
 
 function subscribe(callback: () => void) {
@@ -62,8 +61,9 @@ function setDefaultRound(roundId: string) {
 
 export function BarcodeScanner({ eventId, rounds, requireConfirmation = false, allowDuplicates = true }: BarcodeScannerProps) {
   const scannerRef = useRef<Html5Qrcode | null>(null);
+  const lastSubmitTimeRef = useRef(0);
 
-  const isThrottled = () => Date.now() - lastSubmitTime < SUBMIT_THROTTLE_MS;
+  const isThrottled = () => Date.now() - lastSubmitTimeRef.current < SUBMIT_THROTTLE_MS;
 
   // Set default round for lazy initialization (no state mutation here)
   if (rounds.length > 0 && !defaultRoundId) {
@@ -97,7 +97,8 @@ export function BarcodeScanner({ eventId, rounds, requireConfirmation = false, a
         return;
       }
 
-      lastSubmitTime = Date.now();
+      // eslint-disable-next-line react-hooks/purity -- Only called from event handlers, not during render
+      lastSubmitTimeRef.current = Date.now();
       updateState({
         status: "idle",
         scannedValue: null,
