@@ -2,7 +2,7 @@ import { redirect, notFound } from "next/navigation";
 import { getSession } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { BackButton } from "@/components/BackButton";
-import { BarcodeScanner } from "@/components/BarcodeScanner";
+import { ScannerSelector } from "@/components/ScannerSelector";
 
 interface PageProps {
   params: Promise<{ eventId: string }>;
@@ -52,7 +52,7 @@ export default async function JudgeScanPage({ params }: PageProps) {
         </header>
 
         <main className="flex-1 flex flex-col">
-          <BarcodeScanner
+          <ScannerSelector
             eventId={eventId}
             rounds={event.rounds.map((r: { id: string; roundNumber: number }) => ({
               id: r.id,
