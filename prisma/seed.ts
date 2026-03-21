@@ -30,6 +30,11 @@ function createPrismaClient(): PrismaClient {
 const prisma = createPrismaClient();
 
 async function main() {
+  // Skip seeding in production
+  if (process.env.NODE_ENV === "production") {
+    console.log("⏭️  Skipping seed in production environment");
+    return;
+  }
   // Create a sample store
   const store = await prisma.store.upsert({
     where: { eventCode: "1234" },

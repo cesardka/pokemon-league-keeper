@@ -104,6 +104,5 @@ model Barcode {
   scannedAt DateTime @default(now())
   scannedBy String
 
-  @@unique([roundId, value])
   @@index([eventId, scannedAt])
 }

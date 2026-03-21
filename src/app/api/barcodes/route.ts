@@ -46,12 +46,10 @@ export async function POST(request: NextRequest) {
 
     // Check for duplicate barcode in the same round
     if (roundId && !allowDuplicates) {
-      const existing = await prisma.barcode.findUnique({
+      const existing = await prisma.barcode.findFirst({
         where: {
-          roundId_value: {
-            roundId,
-            value,
-          },
+          roundId,
+          value,
         },
       });
 
@@ -82,6 +80,18 @@ export async function POST(request: NextRequest) {
       },
     });
   } catch (error) {
+    // Handle unique constraint violation (duplicate barcode in same round)
+    if (
+      error instanceof Error &&
+      "code" in error &&
+      (error as { code: string }).code === "P2002"
+    ) {
+      return NextResponse.json(
+        { error: "This barcode was already scanned in this round" },
+        { status: 409 }
+      );
+    }
+
     console.error("Barcode submit error:", error);
     return NextResponse.json(
       { error: "Internal server error" },
