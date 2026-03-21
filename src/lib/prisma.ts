@@ -1,5 +1,5 @@
 import { PrismaClient } from "@prisma/client";
-import { neonConfig, Pool as NeonPool } from "@neondatabase/serverless";
+import { Pool as NeonPool } from "@neondatabase/serverless";
 import { PrismaNeon } from "@prisma/adapter-neon";
 import { PrismaPg } from "@prisma/adapter-pg";
 import { Pool } from "pg";
@@ -13,6 +13,11 @@ function isNeonUrl(url: string | undefined): boolean {
 }
 
 function createPrismaClient(): PrismaClient {
+  console.log({
+    DATABASE_URL: process.env.DATABASE_URL,
+    isNeonUrl: isNeonUrl(process.env.DATABASE_URL),
+  });
+
   const databaseUrl = process.env.DATABASE_URL;
 
   if (!databaseUrl) {
@@ -20,9 +25,6 @@ function createPrismaClient(): PrismaClient {
   }
 
   if (isNeonUrl(databaseUrl)) {
-    // Use fetch-based connection for serverless (Vercel)
-    // WebSocket is only needed for long-running connections in Node.js
-    neonConfig.fetchConnectionCache = true;
     const pool = new NeonPool({ connectionString: databaseUrl });
     const adapter = new PrismaNeon(
       pool as unknown as ConstructorParameters<typeof PrismaNeon>[0],

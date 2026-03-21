@@ -14,17 +14,21 @@ function createPrismaClient(): PrismaClient {
   console.log({
     DATABASE_URL: process.env.DATABASE_URL,
     isNeonUrl: isNeonUrl(process.env.DATABASE_URL),
-  })
+  });
 
   if (isNeonUrl(process.env.DATABASE_URL)) {
     neonConfig.webSocketConstructor = ws;
     const pool = new NeonPool({ connectionString: process.env.DATABASE_URL });
-    const adapter = new PrismaNeon(pool as unknown as ConstructorParameters<typeof PrismaNeon>[0]);
+    const adapter = new PrismaNeon(
+      pool as unknown as ConstructorParameters<typeof PrismaNeon>[0],
+    );
     return new PrismaClient({ adapter });
   }
 
   const pool = new Pool({ connectionString: process.env.DATABASE_URL });
-  const adapter = new PrismaPg(pool as unknown as ConstructorParameters<typeof PrismaPg>[0]);
+  const adapter = new PrismaPg(
+    pool as unknown as ConstructorParameters<typeof PrismaPg>[0],
+  );
   return new PrismaClient({ adapter });
 }
 
