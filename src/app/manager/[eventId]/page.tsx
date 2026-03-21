@@ -60,7 +60,7 @@ export default async function ManagerEventPage({ params }: PageProps) {
           </div>
         </header>
 
-        <main className="flex-1 p-4">
+        <main className="flex-1 flex flex-col p-4">
           <ManagerEventView
             eventId={eventId}
             isEventCompleted={event.status === "COMPLETED"}

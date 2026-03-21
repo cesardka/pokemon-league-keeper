@@ -18,9 +18,11 @@ export default async function JudgeEntryPage() {
   return (
     <div className="flex flex-col flex-1 bg-green-600">
       <div className="flex flex-col flex-1 w-full max-w-2xl mx-auto">
-        <header className="px-4 py-3">
-          <BackButton href="/dashboard" variant="green" />
-        </header>
+        <BackButton
+          href="/dashboard"
+          variant="green"
+          className="py-4 justify-start hover:bg-green-500"
+        />
 
         <main className="flex-1 flex flex-col items-center justify-center px-4">
           <div className="text-center mb-8">
@@ -34,7 +36,9 @@ export default async function JudgeEntryPage() {
                 className="w-64 h-64 animate-swing"
               />
             </div>
-            <h1 className="text-3xl font-bold text-white mb-2 text-shadow-lg">Floor Judge</h1>
+            <h1 className="text-3xl font-bold text-white mb-2 text-shadow-lg">
+              Floor Judge
+            </h1>
             <p className="text-green-100">Enter your name to start scanning</p>
           </div>
 

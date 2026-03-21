@@ -3,6 +3,7 @@ import Link from "next/link";
 interface BackButtonProps {
   href: string;
   variant?: "blue" | "green";
+  className?: string;
 }
 
 const variantStyles = {
@@ -10,11 +11,11 @@ const variantStyles = {
   green: "text-green-200 hover:text-white hover:bg-green-700",
 };
 
-export function BackButton({ href, variant = "blue" }: BackButtonProps) {
+export function BackButton({ href, variant = "blue", className = "" }: BackButtonProps) {
   return (
     <Link
       href={href}
-      className={`flex items-center self-stretch px-3 ml-0 transition-colors ${variantStyles[variant]}`}
+      className={`flex items-center self-stretch px-3 ml-0 transition-colors ${variantStyles[variant]} ${className}`}
     >
       ← Back
     </Link>

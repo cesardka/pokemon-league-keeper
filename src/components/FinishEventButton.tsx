@@ -93,8 +93,9 @@ export function FinishEventButton({
                 Finish Event?
               </h2>
               <p className="text-gray-500">
-                This will mark the event as completed. You can reactivate it
-                later if needed.
+                This will mark the event as completed.
+                <br />
+                You can reactivate it later if needed.
               </p>
             </div>
 

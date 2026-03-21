@@ -33,7 +33,7 @@ export function ManagerEventView({
   const [selectedRoundId, setSelectedRoundId] = useState<string | null>(null);
 
   return (
-    <>
+    <div className="flex flex-col flex-1">
       <div className="mb-4">
         <RoundFilter
           eventId={eventId}
@@ -51,6 +51,6 @@ export function ManagerEventView({
         selectedRoundId={selectedRoundId}
         isEventActive={!isEventCompleted}
       />
-    </>
+    </div>
   );
 }

@@ -47,15 +47,15 @@ body {
 
 @keyframes swing {
   0%, 100% {
-    transform: rotate(-8deg);
+    transform: rotate(-6deg);
   }
   50% {
-    transform: rotate(8deg);
+    transform: rotate(6deg);
   }
 }
 
 .animate-swing {
-  animation: swing 6s ease-in-out infinite;
+  animation: swing 12s ease-in-out infinite;
   transform-origin: center bottom;
 }
 

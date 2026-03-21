@@ -274,29 +274,29 @@ export function BarcodeList({
 
   // Filter barcodes by selected round
   const filteredBarcodes = selectedRoundId
-    ? state?.barcodes.filter((b) => b.roundId === selectedRoundId) ?? []
-    : state?.barcodes ?? [];
+    ? (state?.barcodes.filter((b) => b.roundId === selectedRoundId) ?? [])
+    : (state?.barcodes ?? []);
 
   if (filteredBarcodes.length === 0) {
     return (
-      <div className="text-center py-12">
-        <Image
-          src="/illustrations/100-voltorb.svg"
-          alt="Voltorb"
-          loading="eager"
-          width={200}
-          height={200}
-          className="mx-auto mb-8 object-contain animate-swing"
-        />
-        <p className="text-gray-500">
-          {selectedRoundId
-            ? "No barcodes scanned for this round yet"
-            : "Waiting for scanned barcodes..."}
-        </p>
-        <p className="text-sm text-gray-400 mt-2">
-          Barcodes will appear here as judges scan them
-        </p>
-      </div>
+        <div className="flex-1 flex flex-col items-center justify-center text-center py-12">
+          <Image
+            src="/illustrations/100-voltorb.svg"
+            alt="Voltorb"
+            loading="eager"
+            width={200}
+            height={200}
+            className="mx-auto mb-8 object-contain animate-swing"
+          />
+          <p className="text-gray-500">
+            {selectedRoundId
+              ? "No barcodes scanned for this round yet"
+              : "Waiting for scanned barcodes..."}
+          </p>
+          <p className="text-sm text-gray-400 mt-2">
+            Barcodes will appear here as judges scan them
+          </p>
+        </div>
     );
   }
 
