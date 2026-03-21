@@ -59,7 +59,7 @@ export function LoginForm() {
     setTimeout(() => {
       router.push("/dashboard");
       router.refresh();
-    }, 5000);
+    }, 1500);
   }
 
   const handleInput = (index: number, value: string) => {
@@ -119,7 +119,10 @@ export function LoginForm() {
       {showTransition && (
         <>
           <div className="fixed inset-0 z-40 overflow-hidden pointer-events-none">
-            <div className="absolute inset-y-0 -left-full w-[300%] bg-linear-to-l from-white via-white via-40% to-transparent animate-gradient-sweep" />
+            <div 
+              className="absolute top-1/2 left-1/2 w-[300vmax] h-[300vmax] rounded-full bg-white"
+              style={{ animation: 'circle-expand 3s ease-in-out forwards' }}
+            />
           </div>
           <div className="fixed inset-0 z-50 flex items-center justify-center overflow-hidden pointer-events-none">
             <Image
