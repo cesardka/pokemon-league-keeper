@@ -28,14 +28,14 @@ export function JudgeNameForm() {
           return { error: data.error || "Failed to set name" };
         }
 
-        router.push("/judge/select");
+        router.push("/slips/select");
         router.refresh();
         return { error: null };
       } catch {
         return { error: "Something went wrong. Please try again." };
       }
     },
-    { error: null }
+    { error: null },
   );
 
   return (

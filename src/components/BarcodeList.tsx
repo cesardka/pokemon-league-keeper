@@ -173,47 +173,49 @@ function BarcodeCard({ barcode }: { barcode: BarcodeItem }) {
       }`}
     >
       <div className="flex items-center gap-3">
-        <button
-          onClick={handleCopy}
-          className={`flex-shrink-0 p-4 rounded-lg transition-colors ${
-            copied
-              ? "bg-green-100 text-green-600"
-              : "bg-gray-100 hover:bg-gray-200 text-gray-600"
-          }`}
-          title="Copy barcode value"
-        >
-          {copied ? (
-            <svg
-              className="w-5 h-5"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M5 13l4 4L19 7"
-              />
-            </svg>
-          ) : (
-            <svg
-              className="w-5 h-5"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"
-              />
-            </svg>
-          )}
-        </button>
+        <div className="flex-1 flex justify-start min-w-0">
+          <button
+            onClick={handleCopy}
+            className={`shrink-0 p-4 rounded-lg transition-colors ${
+              copied
+                ? "bg-green-100 text-green-600"
+                : "bg-gray-100 hover:bg-gray-200 text-gray-600"
+            }`}
+            title="Copy barcode value"
+          >
+            {copied ? (
+              <svg
+                className="w-5 h-5"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M5 13l4 4L19 7"
+                />
+              </svg>
+            ) : (
+              <svg
+                className="w-5 h-5"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"
+                />
+              </svg>
+            )}
+          </button>
+        </div>
 
-        <div className="flex-1 overflow-hidden flex justify-center">
+        <div className="shrink min-w-0 overflow-hidden flex justify-center">
           <Barcode
             value={barcode.value}
             height={80}
@@ -224,15 +226,17 @@ function BarcodeCard({ barcode }: { barcode: BarcodeItem }) {
           />
         </div>
 
-        <div className="text-right shrink-0 self-end">
-          <p
-            className={`text-xs font-medium ${
-              barcode.isNew ? "text-green-600" : "text-gray-400"
-            }`}
-          >
-            {formatRelativeTime(barcode.scannedAt)}
-          </p>
-          <p className="text-xs text-gray-400">{barcode.scannedBy}</p>
+        <div className="flex-1 flex justify-end min-w-0">
+          <div className="text-right">
+            <p
+              className={`text-xs font-medium ${
+                barcode.isNew ? "text-green-600" : "text-gray-400"
+              }`}
+            >
+              {formatRelativeTime(barcode.scannedAt)}
+            </p>
+            <p className="text-xs text-gray-400">{barcode.scannedBy}</p>
+          </div>
         </div>
       </div>
     </div>
@@ -279,24 +283,24 @@ export function BarcodeList({
 
   if (filteredBarcodes.length === 0) {
     return (
-        <div className="flex-1 flex flex-col items-center justify-center text-center py-12">
-          <Image
-            src="/illustrations/100-voltorb.svg"
-            alt="Voltorb"
-            loading="eager"
-            width={200}
-            height={200}
-            className="mx-auto mb-8 object-contain animate-swing"
-          />
-          <p className="text-gray-500">
-            {selectedRoundId
-              ? "No barcodes scanned for this round yet"
-              : "Waiting for scanned barcodes..."}
-          </p>
-          <p className="text-sm text-gray-400 mt-2">
-            Barcodes will appear here as judges scan them
-          </p>
-        </div>
+      <div className="flex-1 flex flex-col items-center justify-center text-center py-12">
+        <Image
+          src="/illustrations/100-voltorb.svg"
+          alt="Voltorb"
+          loading="eager"
+          width={200}
+          height={200}
+          className="mx-auto mb-8 object-contain animate-swing"
+        />
+        <p className="text-gray-500">
+          {selectedRoundId
+            ? "No barcodes scanned for this round yet"
+            : "Waiting for scanned barcodes..."}
+        </p>
+        <p className="text-sm text-gray-400 mt-2">
+          Barcodes will appear here as judges scan them
+        </p>
+      </div>
     );
   }
 

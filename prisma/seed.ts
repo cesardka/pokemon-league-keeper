@@ -118,8 +118,83 @@ async function main() {
   });
 
   console.log("Created sample barcodes");
+
+  // Load-test event with 1000 barcodes for /queue performance testing
+  const LOAD_TEST_EVENT_ID = "load-test-event-1k";
+  const LOAD_TEST_BARCODE_COUNT = 1000;
+
+  const loadTestEvent = await prisma.event.upsert({
+    where: { id: LOAD_TEST_EVENT_ID },
+    update: {},
+    create: {
+      id: LOAD_TEST_EVENT_ID,
+      storeId: store.id,
+      name: `Load Test Tournament (${LOAD_TEST_BARCODE_COUNT} slips)`,
+      game: "Pokemon TCG",
+      date: new Date(),
+      status: "ACTIVE",
+    },
+  });
+
+  const loadTestRound = await prisma.round.upsert({
+    where: {
+      eventId_roundNumber: {
+        eventId: loadTestEvent.id,
+        roundNumber: 1,
+      },
+    },
+    update: {},
+    create: {
+      eventId: loadTestEvent.id,
+      roundNumber: 1,
+    },
+  });
+
+  const existingLoadTestBarcodes = await prisma.barcode.count({
+    where: { eventId: loadTestEvent.id },
+  });
+
+  if (existingLoadTestBarcodes < LOAD_TEST_BARCODE_COUNT) {
+    const judges = ["Judge Fernanda", "Judge Cesar", "Judge Alex", "Judge Sam"];
+    const now = Date.now();
+    const toCreate = Array.from(
+      { length: LOAD_TEST_BARCODE_COUNT - existingLoadTestBarcodes },
+      (_, i) => {
+        const index = existingLoadTestBarcodes + i;
+        // Zero-padded 12-digit value, e.g. PKM000000000001
+        const value = `PKM${String(index + 1).padStart(12, "0")}`;
+        return {
+          eventId: loadTestEvent.id,
+          roundId: loadTestRound.id,
+          value,
+          scannedBy: judges[index % judges.length],
+          // Stagger timestamps: most recent first in ordering
+          scannedAt: new Date(now - index * 1000),
+        };
+      },
+    );
+
+    // Insert in chunks to avoid hitting parameter limits
+    const CHUNK_SIZE = 500;
+    for (let i = 0; i < toCreate.length; i += CHUNK_SIZE) {
+      await prisma.barcode.createMany({
+        data: toCreate.slice(i, i + CHUNK_SIZE),
+        skipDuplicates: true,
+      });
+    }
+
+    console.log(
+      `Created ${toCreate.length} load-test barcodes for event "${loadTestEvent.name}"`,
+    );
+  } else {
+    console.log(
+      `Load-test event already has ${existingLoadTestBarcodes} barcodes, skipping`,
+    );
+  }
+
   console.log("\n✅ Seed completed successfully!");
   console.log("Event code to login: 1234");
+  console.log(`Load-test event id: ${LOAD_TEST_EVENT_ID}`);
 }
 
 main()

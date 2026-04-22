@@ -36,7 +36,6 @@ export default async function ManagerEventPage({ params }: PageProps) {
   const barcodes = await prisma.barcode.findMany({
     where: { eventId },
     orderBy: { scannedAt: "desc" },
-    take: 50,
   });
 
   return (
@@ -45,11 +44,12 @@ export default async function ManagerEventPage({ params }: PageProps) {
         <header className="bg-blue-600 text-white">
           <div className="flex items-stretch justify-between">
             <div className="flex items-stretch gap-3">
-              <BackButton href="/manager" variant="blue" />
+              <BackButton href="/queue" variant="blue" />
               <div className="py-3">
                 <h1 className="font-semibold">{event.name}</h1>
                 <p className="text-sm text-blue-200">
-                  {new Date(event.date).toLocaleDateString()} • {event.rounds.length} rounds
+                  {new Date(event.date).toLocaleDateString()} •{" "}
+                  {event.rounds.length} rounds
                   {event.status === "COMPLETED" && " • Finished"}
                 </p>
               </div>
@@ -62,17 +62,27 @@ export default async function ManagerEventPage({ params }: PageProps) {
           <ManagerEventView
             eventId={eventId}
             isEventCompleted={event.status === "COMPLETED"}
-            rounds={event.rounds.map((r: { id: string; roundNumber: number }) => ({
-              id: r.id,
-              roundNumber: r.roundNumber,
-            }))}
-            initialBarcodes={barcodes.map((b: { id: string; value: string; scannedAt: Date; scannedBy: string; roundId: string | null }) => ({
-              id: b.id,
-              value: b.value,
-              scannedAt: b.scannedAt.toISOString(),
-              scannedBy: b.scannedBy,
-              roundId: b.roundId,
-            }))}
+            rounds={event.rounds.map(
+              (r: { id: string; roundNumber: number }) => ({
+                id: r.id,
+                roundNumber: r.roundNumber,
+              }),
+            )}
+            initialBarcodes={barcodes.map(
+              (b: {
+                id: string;
+                value: string;
+                scannedAt: Date;
+                scannedBy: string;
+                roundId: string | null;
+              }) => ({
+                id: b.id,
+                value: b.value,
+                scannedAt: b.scannedAt.toISOString(),
+                scannedBy: b.scannedBy,
+                roundId: b.roundId,
+              }),
+            )}
           />
         </main>
       </div>

@@ -6,7 +6,7 @@ export function Footer() {
   const pathname = usePathname();
 
   const isHomepage = pathname === "/";
-  const isJudgePage = pathname === "/judge";
+  const isJudgePage = pathname === "/slips";
 
   return (
     <footer

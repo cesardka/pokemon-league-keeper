@@ -37,7 +37,7 @@ export function CreateEventForm() {
       setIsOpen(false);
 
       startTransition(() => {
-        router.push(`/manager/${data.event.id}`);
+        router.push(`/queue/${data.event.id}`);
         router.refresh();
       });
     } catch {

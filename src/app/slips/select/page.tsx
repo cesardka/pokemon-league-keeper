@@ -13,7 +13,7 @@ export default async function JudgeSelectPage() {
   }
 
   if (!session.judgeName) {
-    redirect("/judge");
+    redirect("/slips");
   }
 
   const events = (await prisma.event.findMany({
@@ -36,7 +36,7 @@ export default async function JudgeSelectPage() {
           <div className="flex items-stretch gap-3">
             <BackButton href="/dashboard" variant="green" />
             <div className="py-3">
-              <h1 className="font-semibold">Floor Judge</h1>
+              <h1 className="font-semibold">Scan Match Slips</h1>
               <p className="text-sm text-green-200">Hi, {session.judgeName}!</p>
             </div>
           </div>
@@ -52,12 +52,14 @@ export default async function JudgeSelectPage() {
               {events.map((event: EventWithCounts) => (
                 <Link
                   key={event.id}
-                  href={`/judge/${event.id}`}
+                  href={`/slips/${event.id}`}
                   className="block bg-white rounded-xl p-4 shadow-sm border border-green-200 hover:border-green-400 transition-colors"
                 >
                   <div className="flex items-center justify-between">
                     <div>
-                      <h3 className="font-medium text-gray-900">{event.name}</h3>
+                      <h3 className="font-medium text-gray-900">
+                        {event.name}
+                      </h3>
                       <p className="text-sm text-gray-500">
                         {new Date(event.date).toLocaleDateString()} •{" "}
                         {event._count.rounds} rounds

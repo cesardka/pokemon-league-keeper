@@ -25,7 +25,9 @@ function getInitialMode(): { mode: ScannerMode | null; showSelector: boolean } {
   if (typeof window === "undefined") {
     return { mode: null, showSelector: true };
   }
-  const savedMode = localStorage.getItem(SCANNER_MODE_KEY) as ScannerMode | null;
+  const savedMode = localStorage.getItem(
+    SCANNER_MODE_KEY,
+  ) as ScannerMode | null;
   if (savedMode === "camera" || savedMode === "usb") {
     return { mode: savedMode, showSelector: false };
   }
@@ -58,7 +60,7 @@ export function JudgeScannerView({
       <header className="bg-green-600 text-white">
         <div className="flex items-center justify-between">
           <div className="flex items-stretch gap-3">
-            <BackButton href="/judge/select" variant="green" />
+            <BackButton href="/slips/select" variant="green" />
             <div className="py-3">
               <h1 className="font-semibold">{eventName}</h1>
               <p className="text-sm text-green-200">{judgeName}</p>
@@ -122,9 +124,19 @@ export function JudgeScannerView({
         {showSelector ? (
           <ScannerModeSelector onSelect={selectMode} />
         ) : mode === "camera" ? (
-          <BarcodeScanner eventId={eventId} rounds={rounds} />
+          <BarcodeScanner
+            eventId={eventId}
+            rounds={rounds}
+            highThroughput
+            allowDuplicates
+          />
         ) : (
-          <UsbBarcodeScanner eventId={eventId} rounds={rounds} />
+          <UsbBarcodeScanner
+            eventId={eventId}
+            rounds={rounds}
+            highThroughput
+            allowDuplicates
+          />
         )}
       </main>
     </>

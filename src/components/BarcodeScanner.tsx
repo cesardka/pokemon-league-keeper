@@ -13,6 +13,7 @@ interface BarcodeScannerProps {
   rounds: Round[];
   requireConfirmation?: boolean;
   allowDuplicates?: boolean;
+  highThroughput?: boolean;
 }
 
 type ScanStatus = "idle" | "scanning" | "success" | "error";
@@ -35,7 +36,8 @@ let scannerState: ScannerState = {
 };
 const listeners = new Set<() => void>();
 let defaultRoundId: string | null = null;
-const SUBMIT_THROTTLE_MS = 2000;
+const SUBMIT_THROTTLE_MS_DEFAULT = 2000;
+const SUBMIT_THROTTLE_MS_FAST = 500;
 
 function subscribe(callback: () => void) {
   listeners.add(callback);
@@ -59,11 +61,20 @@ function setDefaultRound(roundId: string) {
   defaultRoundId = roundId;
 }
 
-export function BarcodeScanner({ eventId, rounds, requireConfirmation = false, allowDuplicates = true }: BarcodeScannerProps) {
+export function BarcodeScanner({
+  eventId,
+  rounds,
+  requireConfirmation = false,
+  allowDuplicates = true,
+  highThroughput = false,
+}: BarcodeScannerProps) {
   const scannerRef = useRef<Html5Qrcode | null>(null);
   const lastSubmitTimeRef = useRef(0);
+  const throttleMs = highThroughput
+    ? SUBMIT_THROTTLE_MS_FAST
+    : SUBMIT_THROTTLE_MS_DEFAULT;
 
-  const isThrottled = () => Date.now() - lastSubmitTimeRef.current < SUBMIT_THROTTLE_MS;
+  const isThrottled = () => Date.now() - lastSubmitTimeRef.current < throttleMs;
 
   // Set default round for lazy initialization (no state mutation here)
   if (rounds.length > 0 && !defaultRoundId) {
@@ -93,7 +104,10 @@ export function BarcodeScanner({ eventId, rounds, requireConfirmation = false, a
 
       if (!response.ok) {
         const data = await response.json();
-        updateState({ error: data.error || "Failed to submit barcode", status: "error" });
+        updateState({
+          error: data.error || "Failed to submit barcode",
+          status: "error",
+        });
         return;
       }
 
@@ -122,7 +136,7 @@ export function BarcodeScanner({ eventId, rounds, requireConfirmation = false, a
       await scanner.start(
         { facingMode: "environment" },
         {
-          fps: 10,
+          fps: highThroughput ? 15 : 10,
           qrbox: { width: 350, height: 150 },
         },
         (decodedText) => {
@@ -133,7 +147,7 @@ export function BarcodeScanner({ eventId, rounds, requireConfirmation = false, a
             status: "success",
           });
           scanner.pause(true);
-          
+
           if (!requireConfirmation) {
             // Auto-submit without confirmation
             autoSubmit(decodedText);

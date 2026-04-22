@@ -12,7 +12,7 @@ export default async function JudgeEntryPage() {
   }
 
   if (session.judgeName) {
-    redirect("/judge/select");
+    redirect("/slips/select");
   }
 
   return (
@@ -37,7 +37,7 @@ export default async function JudgeEntryPage() {
               />
             </div>
             <h1 className="text-3xl font-bold text-white mb-2 text-shadow-lg">
-              Floor Judge
+              Scan Match Slips
             </h1>
             <p className="text-green-100">Enter your name to start scanning</p>
           </div>

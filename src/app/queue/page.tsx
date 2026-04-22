@@ -30,8 +30,8 @@ export default async function ManagerSelectPage() {
           <div className="flex items-stretch gap-3">
             <BackButton href="/dashboard" variant="blue" />
             <div className="py-3">
-              <h1 className="font-semibold">Event Manager</h1>
-              <p className="text-sm text-blue-200">Select an event to monitor</p>
+              <h1 className="font-semibold">Send to TOM</h1>
+              <p className="text-sm text-blue-200">Select an event</p>
             </div>
           </div>
         </header>
@@ -44,12 +44,14 @@ export default async function ManagerSelectPage() {
               {events.map((event: EventWithCounts) => (
                 <Link
                   key={event.id}
-                  href={`/manager/${event.id}`}
+                  href={`/queue/${event.id}`}
                   className="block bg-white rounded-xl p-4 shadow-sm border hover:border-blue-300 transition-colors"
                 >
                   <div className="flex items-center justify-between">
                     <div>
-                      <h3 className="font-medium text-gray-900">{event.name}</h3>
+                      <h3 className="font-medium text-gray-900">
+                        {event.name}
+                      </h3>
                       <p className="text-sm text-gray-500">
                         {new Date(event.date).toLocaleDateString()} •{" "}
                         {event._count.rounds} rounds

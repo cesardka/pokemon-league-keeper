@@ -59,3 +59,35 @@ export async function clearSession(): Promise<void> {
   const cookieStore = await cookies();
   cookieStore.delete(SESSION_COOKIE);
 }
+
+export async function getOrCreateDefaultStore() {
+  // For MVP: use first store or create one
+  let store = await prisma.store.findFirst();
+
+  if (!store) {
+    store = await prisma.store.create({
+      data: {
+        name: "MVP Tournament",
+        eventCode: "0000",
+        location: "Default Location",
+      },
+    });
+  }
+
+  return store;
+}
+
+export async function ensureMvpSession(): Promise<Session> {
+  const existingSession = await getSession();
+  if (existingSession) {
+    return existingSession;
+  }
+
+  const store = await getOrCreateDefaultStore();
+  const session: Session = {
+    storeId: store.id,
+    storeName: store.name,
+  };
+  await setSession(session);
+  return session;
+}
