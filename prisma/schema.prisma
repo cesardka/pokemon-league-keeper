@@ -18,6 +18,8 @@ model Store {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
   events    Event[]
+
+  @@map("store")
 }
 
 enum EventStatus {
@@ -38,6 +40,8 @@ model Event {
   updatedAt DateTime    @updatedAt
   rounds    Round[]
   barcodes  Barcode[]
+
+  @@map("event")
 }
 
 model Round {
@@ -51,6 +55,7 @@ model Round {
   barcodes    Barcode[]
 
   @@unique([eventId, roundNumber])
+  @@map("round")
 }
 
 enum Category {
@@ -70,6 +75,8 @@ model Participant {
   matchesAsP1 Match[]  @relation("Participant1")
   matchesAsP2 Match[]  @relation("Participant2")
   wins        Match[]  @relation("Winner")
+
+  @@map("participant")
 }
 
 enum MatchResult {
@@ -92,6 +99,8 @@ model Match {
   result         MatchResult @default(PENDING)
   createdAt      DateTime    @default(now())
   updatedAt      DateTime    @updatedAt
+
+  @@map("match")
 }
 
 model Barcode {
@@ -105,4 +114,5 @@ model Barcode {
   scannedBy String
 
   @@index([eventId, scannedAt])
+  @@map("barcode")
 }
