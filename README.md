@@ -41,6 +41,7 @@ A web application for managing local Pokemon TCG tournaments with mobile barcode
 
 - [Pokemon Archive Assets](https://www.pokeos.com/archive/assets)
 - [Pokemon Hi-Res Item Icons](https://drive.google.com/drive/folders/1rPpIzyWRidSKoAwQyWwiVg9hTyjU-8r3)
+- [Katuu2000 Patreon](https://www.patreon.com/cw/Katuu2000)
 
 ## Getting Started
 
@@ -207,6 +208,11 @@ NODE_ENV=development \
 DATABASE_URL="<REMOTE_URL>" \
 pnpm db:seed
 ```
+
+> Use `pnpm db:seed` (runs `npx tsx prisma/seed.ts` directly), **not**
+> `pnpm prisma db seed`. The latter goes through the Prisma CLI which
+> does not forward the inline `DATABASE_URL` to the seed child process
+> and the script ends up connecting to `localhost` defaults.
 
 > The seed short-circuits when `NODE_ENV=production`, so explicitly set
 > `NODE_ENV=development` if your shell already exports production.

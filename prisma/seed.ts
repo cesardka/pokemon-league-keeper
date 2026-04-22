@@ -1,26 +1,21 @@
 import { PrismaClient } from "@prisma/client";
-import { neonConfig, Pool as NeonPool } from "@neondatabase/serverless";
-import { PrismaNeon } from "@prisma/adapter-neon";
 import { PrismaPg } from "@prisma/adapter-pg";
 import { Pool } from "pg";
-import ws from "ws";
 import "dotenv/config";
 
-function isNeonUrl(url: string | undefined): boolean {
-  return !!url?.includes("neon.tech");
-}
-
 function createPrismaClient(): PrismaClient {
-  if (isNeonUrl(process.env.DATABASE_URL)) {
-    neonConfig.webSocketConstructor = ws;
-    const pool = new NeonPool({ connectionString: process.env.DATABASE_URL });
-    const adapter = new PrismaNeon(
-      pool as unknown as ConstructorParameters<typeof PrismaNeon>[0],
+  const connectionString = process.env.DATABASE_URL;
+  if (!connectionString) {
+    throw new Error(
+      "DATABASE_URL is not set. Pass it inline or via .env before running the seed.",
     );
-    return new PrismaClient({ adapter });
   }
 
-  const pool = new Pool({ connectionString: process.env.DATABASE_URL });
+  // Use the standard pg driver for seeding (runs on Node locally/in CI).
+  // Neon accepts regular pg connections over SSL, so no serverless adapter
+  // is needed here — avoids flaky connection-string plumbing in
+  // @neondatabase/serverless' pool-to-client handoff.
+  const pool = new Pool({ connectionString });
   const adapter = new PrismaPg(
     pool as unknown as ConstructorParameters<typeof PrismaPg>[0],
   );

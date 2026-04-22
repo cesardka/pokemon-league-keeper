@@ -69,6 +69,23 @@ function setDefaultRound(roundId: string) {
   usbDefaultRoundId = roundId;
 }
 
+// Returns true when `el` is an element the user might be actively
+// interacting with (form controls). Used to avoid stealing focus back
+// to the hidden USB-scanner input and accidentally closing native
+// dropdowns / picker UIs.
+function isInteractiveElement(el: EventTarget | Element | null): boolean {
+  if (!el || !(el as Element).tagName) return false;
+  const tag = (el as Element).tagName.toUpperCase();
+  return (
+    tag === "SELECT" ||
+    tag === "INPUT" ||
+    tag === "TEXTAREA" ||
+    tag === "BUTTON" ||
+    tag === "A" ||
+    (el as HTMLElement).isContentEditable === true
+  );
+}
+
 // Reset state when component mounts
 function resetState() {
   usbScannerState = {
@@ -204,7 +221,12 @@ export function UsbBarcodeScanner({
   // Focus management for accessibility
   useEffect(() => {
     if (!state.showConfirm && !state.mockMode && inputRef.current) {
-      inputRef.current.focus();
+      // Don't steal focus from other interactive controls (e.g. the round
+      // select, test-mode input, or buttons). Only refocus if nothing
+      // interactive currently has focus.
+      if (!isInteractiveElement(document.activeElement)) {
+        inputRef.current.focus();
+      }
     }
   }, [state.showConfirm, state.mockMode]);
 
@@ -304,10 +326,20 @@ export function UsbBarcodeScanner({
           className="sr-only"
           aria-label="USB barcode scanner input"
           onBlur={(e) => {
-            // Re-focus unless modal is open or mock mode
-            if (!state.showConfirm && !state.mockMode) {
-              setTimeout(() => e.target.focus(), 100);
-            }
+            // Re-focus only if the user didn't move focus to another
+            // interactive control (e.g. the round <select>, buttons,
+            // test-mode input, modal) — otherwise we'd yank focus back
+            // and close their dropdown / picker.
+            if (state.showConfirm || state.mockMode) return;
+            if (isInteractiveElement(e.relatedTarget)) return;
+            setTimeout(() => {
+              if (
+                !isInteractiveElement(document.activeElement) &&
+                inputRef.current
+              ) {
+                inputRef.current.focus();
+              }
+            }, 100);
           }}
         />
 
