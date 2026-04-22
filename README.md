@@ -232,6 +232,16 @@ NODE_ENV=development DATABASE_URL="<REMOTE_URL>" pnpm db:seed
 - **Neon connection hangs / errors** — make sure you're using the
   **pooled** connection string (contains `-pooler`). The seed and
   client auto-detect Neon and use the serverless driver.
+- **`P3005: The database schema is not empty`** when running
+  `db:migrate:deploy` against the remote — the DB already has tables
+  but no `_prisma_migrations` history (common after previous
+  `db:push` usage). If you're OK wiping it, run
+  `DATABASE_URL="<REMOTE_URL>" pnpm prisma migrate reset --force`.
+  If you need to preserve data, baseline instead: see
+  [Prisma docs — baselining](https://pris.ly/d/migrate-baseline).
+- **`P1001: Can't reach database server`** to Neon — remove the
+  `channel_binding=require` query parameter from the URL; Prisma's
+  node-postgres driver doesn't support it. Keep `sslmode=require`.
 - **Seed says "Load-test event already has 1000 barcodes, skipping"**
   and you want fresh values — delete the existing load-test rows first:
   ```sql
