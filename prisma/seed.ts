@@ -156,13 +156,39 @@ async function main() {
 
   if (existingLoadTestBarcodes < LOAD_TEST_BARCODE_COUNT) {
     const judges = ["Judge Fernanda", "Judge Cesar", "Judge Alex", "Judge Sam"];
+    const prefixes = ["PKM", "TCG", "PTL", "MTG", "EVT", "SLP", "QNX", "ZRB"];
+    const alphanum = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789"; // no ambiguous chars
+    // Deterministic PRNG so re-seeding produces the same values
+    let rngState = 0x6d2b79f5;
+    const rand = () => {
+      rngState = (rngState + 0x6d2b79f5) | 0;
+      let t = rngState;
+      t = Math.imul(t ^ (t >>> 15), t | 1);
+      t ^= t + Math.imul(t ^ (t >>> 7), t | 61);
+      return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+    };
+    const randomChunk = (len: number) =>
+      Array.from(
+        { length: len },
+        () => alphanum[Math.floor(rand() * alphanum.length)],
+      ).join("");
+
+    const usedValues = new Set<string>();
     const now = Date.now();
     const toCreate = Array.from(
       { length: LOAD_TEST_BARCODE_COUNT - existingLoadTestBarcodes },
       (_, i) => {
         const index = existingLoadTestBarcodes + i;
-        // Zero-padded 12-digit value, e.g. PKM000000000001
-        const value = `PKM${String(index + 1).padStart(12, "0")}`;
+        // Mix prefix, variable body length, and varied char set so each
+        // barcode produces a visually distinct Code128 pattern.
+        const prefix = prefixes[Math.floor(rand() * prefixes.length)];
+        const bodyLen = 6 + Math.floor(rand() * 5); // 6–10 chars
+        let value: string;
+        do {
+          value = `${prefix}-${randomChunk(bodyLen)}`;
+        } while (usedValues.has(value));
+        usedValues.add(value);
+
         return {
           eventId: loadTestEvent.id,
           roundId: loadTestRound.id,
