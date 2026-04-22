@@ -1,3 +1,23 @@
+- [Pokemon TCG Tournament Manager](#pokemon-tcg-tournament-manager)
+  - [Features](#features)
+  - [Tech Stack](#tech-stack)
+  - [Art Resources](#art-resources)
+  - [Getting Started](#getting-started)
+    - [Prerequisites](#prerequisites)
+    - [Local Setup](#local-setup)
+    - [Database Management](#database-management)
+    - [Default Event Code](#default-event-code)
+  - [Project Structure](#project-structure)
+  - [Deployment](#deployment)
+  - [Updating the Remote Database](#updating-the-remote-database)
+    - [1. Grab the remote connection string](#1-grab-the-remote-connection-string)
+    - [2. Make sure your migrations are committed](#2-make-sure-your-migrations-are-committed)
+    - [3. Apply the migrations to the remote DB](#3-apply-the-migrations-to-the-remote-db)
+    - [4. (Optional) Seed the remote DB](#4-optional-seed-the-remote-db)
+    - [5. (Destructive) Fully reset the remote DB](#5-destructive-fully-reset-the-remote-db)
+    - [Troubleshooting](#troubleshooting)
+  - [Roadmap](#roadmap)
+
 # Pokemon TCG Tournament Manager
 
 A web application for managing local Pokemon TCG tournaments with mobile barcode scanning.
@@ -88,22 +108,25 @@ A web application for managing local Pokemon TCG tournaments with mobile barcode
 
 ### Database Management
 
-| Command                | Description         |
-| ---------------------- | ------------------- |
-| `docker compose up -d` | Start PostgreSQL    |
-| `docker compose down`  | Stop PostgreSQL     |
-| `pnpm db:push`         | Push schema changes |
-| `pnpm db:seed`         | Seed sample data    |
-| `pnpm db:studio`       | Open Prisma Studio  |
+| Command                  | Description                            |
+| ------------------------ | -------------------------------------- |
+| `docker compose up -d`   | Start PostgreSQL                       |
+| `docker compose down`    | Stop PostgreSQL                        |
+| `pnpm db:push`           | Push schema changes                    |
+| `pnpm db:seed`           | Seed sample data                       |
+| `pnpm db:studio`         | Open Prisma Studio                     |
+| `pnpm db:migrate:dev`    | Create + apply a new migration (dev)   |
+| `pnpm db:migrate:deploy` | Apply pending migrations (prod/remote) |
 
 **TablePlus / GUI Connection:**
-| Field | Value |
-|-------|-------|
-| Host | `localhost` |
-| Port | `5433` |
-| User | `postgres` |
-| Password | `postgres` |
-| Database | `creed` |
+
+| Field    | Value       |
+| -------- | ----------- |
+| Host     | `localhost` |
+| Port     | `5433`      |
+| User     | `postgres`  |
+| Password | `postgres`  |
+| Database | `creed`     |
 
 ### Default Event Code
 
@@ -132,6 +155,89 @@ Deploy to Vercel:
 4. Deploy
 
 The `DATABASE_URL` will be automatically configured.
+
+## Updating the Remote Database
+
+Use this whenever you've changed `prisma/schema.prisma` and/or want to
+re-seed the shared/remote database (Neon, Vercel Postgres, etc.).
+
+> **Never commit your remote `DATABASE_URL`.** Pass it inline to the
+> commands below, or keep it in an untracked `.env.production` file.
+
+### 1. Grab the remote connection string
+
+- **Neon**: copy the **pooled** connection string (it contains
+  `-pooler`) from the Neon dashboard.
+- **Vercel Postgres**: Project → Storage → your DB → `.env.local` tab,
+  copy `DATABASE_URL`.
+
+Keep it handy as `<REMOTE_URL>` below. On Neon it should look like:
+
+```
+postgresql://<user>:<password>@<project>-pooler.<region>.aws.neon.tech/<db>?sslmode=require
+```
+
+### 2. Make sure your migrations are committed
+
+Locally, every schema change must first be captured as a migration:
+
+```bash
+pnpm db:migrate:dev --name <short_description>
+git add prisma/schema.prisma prisma/migrations
+git commit -m "db: <short_description>"
+```
+
+### 3. Apply the migrations to the remote DB
+
+```bash
+DATABASE_URL="<REMOTE_URL>" pnpm db:migrate:deploy
+```
+
+This applies every pending migration found in `prisma/migrations/` to
+the remote DB. It is idempotent — running it again is a no-op.
+
+### 4. (Optional) Seed the remote DB
+
+The seed in `prisma/seed.ts` is idempotent — existing rows are not
+duplicated, and the 1000-row load-test event is only created if it
+doesn't already exist.
+
+```bash
+NODE_ENV=development \
+DATABASE_URL="<REMOTE_URL>" \
+pnpm db:seed
+```
+
+> The seed short-circuits when `NODE_ENV=production`, so explicitly set
+> `NODE_ENV=development` if your shell already exports production.
+
+### 5. (Destructive) Fully reset the remote DB
+
+Only do this on staging/dev DBs — **it drops every table**:
+
+```bash
+DATABASE_URL="<REMOTE_URL>" pnpm prisma migrate reset --force
+# then re-seed if the reset didn't run the seed automatically:
+NODE_ENV=development DATABASE_URL="<REMOTE_URL>" pnpm db:seed
+```
+
+### Troubleshooting
+
+- **`The table public.Xyz does not exist`** after a migration — the
+  generated Prisma client is stale. Run:
+  ```bash
+  rm -rf node_modules/.prisma node_modules/@prisma/client
+  pnpm install && pnpm prisma generate
+  ```
+- **Neon connection hangs / errors** — make sure you're using the
+  **pooled** connection string (contains `-pooler`). The seed and
+  client auto-detect Neon and use the serverless driver.
+- **Seed says "Load-test event already has 1000 barcodes, skipping"**
+  and you want fresh values — delete the existing load-test rows first:
+  ```sql
+  DELETE FROM "barcode" WHERE "eventId" = 'load-test-event-1k';
+  ```
+  Then re-run the seed.
 
 ## Roadmap
 
