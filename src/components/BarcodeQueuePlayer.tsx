@@ -27,15 +27,25 @@ export function BarcodeQueuePlayer({
 }: BarcodeQueuePlayerProps) {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [isPlaying, setIsPlaying] = useState(false);
-  const [speed, setSpeed] = useState(() => {
-    if (typeof window === "undefined") return DEFAULT_SPEED;
-    const saved = localStorage.getItem(SPEED_STORAGE_KEY);
-    return saved ? parseInt(saved, 10) : DEFAULT_SPEED;
-  });
+  const [speed, setSpeed] = useState(DEFAULT_SPEED);
+  const hasHydratedSpeed = useRef(false);
   const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
-  // Persist speed to localStorage
+  // Hydrate speed from localStorage after mount to avoid SSR/CSR mismatch
   useEffect(() => {
+    const saved = localStorage.getItem(SPEED_STORAGE_KEY);
+    if (saved) {
+      const parsed = parseInt(saved, 10);
+      if (!Number.isNaN(parsed)) {
+        setSpeed(parsed);
+      }
+    }
+    hasHydratedSpeed.current = true;
+  }, []);
+
+  // Persist speed to localStorage (skip the initial default before hydration)
+  useEffect(() => {
+    if (!hasHydratedSpeed.current) return;
     localStorage.setItem(SPEED_STORAGE_KEY, speed.toString());
   }, [speed]);
 
@@ -265,13 +275,14 @@ export function BarcodeQueuePlayer({
               <input
                 id="queue-speed-input"
                 type="number"
+                inputMode="numeric"
                 min={MIN_SPEED}
                 max={MAX_SPEED}
                 value={speed}
                 onChange={(e) =>
                   handleSpeedChange(parseInt(e.target.value, 10))
                 }
-                className="w-14 px-1.5 py-1 text-xs text-right border border-gray-200 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 tabular-nums"
+                className="w-14 px-1.5 py-1 text-xs text-right text-gray-800 bg-white border border-gray-200 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 tabular-nums appearance-none [-moz-appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-inner-spin-button]:m-0"
               />
               <span className="text-[10px] text-gray-500 shrink-0">bpm</span>
             </div>
