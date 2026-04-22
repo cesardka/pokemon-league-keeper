@@ -19,7 +19,7 @@ interface BarcodeQueuePlayerProps {
 const SPEED_STORAGE_KEY = "queue-speed-bpm";
 const DEFAULT_SPEED = 120; // barcodes per minute
 const MIN_SPEED = 30;
-const MAX_SPEED = 300;
+const MAX_SPEED = 1000;
 
 export function BarcodeQueuePlayer({
   barcodes,
